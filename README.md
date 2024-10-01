@@ -46,7 +46,7 @@ Ao ser solicitado para selecionar o servidor, escolha o Apache2.
 
 Ao ser solicitado para criar um banco de dados, recomendo selecionar a opção "não", após a instalação crie o banco de dados manualmente.
 
-## Configuração de Segurança do MariaDB
+### Configuração de Segurança do MariaDB
 
 Após a instalação realize as configurações de segurança do MariaDB.
 
@@ -59,7 +59,7 @@ Após a instalação realize as configurações de segurança do MariaDB.
 - Pressione Y para Remove test database and access to it?
 - Pressione Y para Reload privilege tables now?
 
-## Configurando o PHPMyAdmin para login automático
+### Configurando o PHPMyAdmin para login automático
 Edite o arquivo: /etc/phpmyadmin/config.inc.php:
 
 Altere o auth_type para:
