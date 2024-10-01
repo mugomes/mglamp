@@ -46,6 +46,19 @@ Ao ser solicitado para selecionar o servidor, escolha o Apache2.
 
 Ao ser solicitado para criar um banco de dados, recomendo selecionar a opção "não", após a instalação crie o banco de dados manualmente.
 
+## Configuração de Segurança do MariaDB
+
+Após a instalação realize as configurações de segurança do MariaDB.
+
+- Digite no terminal: sudo mysql_secure_installation
+- Pressione ENTER em Enter current password for root (enter for none):
+- Pressione n para Switch to unix_socket authentication Y/n
+- Pressione n para Change the root password?
+- Pressione Y para Remove anonymous users?
+- Pressione Y para Disallow root login remotely?
+- Pressione Y para Remove test database and access to it?
+- Pressione Y para Reload privilege tables now?
+
 ## Configurando o PHPMyAdmin para login automático
 Edite o arquivo: /etc/phpmyadmin/config.inc.php:
 
@@ -53,11 +66,11 @@ Altere o auth_type para:
 $cfg['Servers'][$i]['auth_type'] = 'config';
 
 Adicione essas duas linhas:
-$cfg['Servers'][$i]['user'] = '';
-$cfg['Servers'][$i]['password'] = '';
 
-- Em "user" informe o nome de usuário de sua conta MySQL, exemplo "admin".
-- Em "password" informe a senha de sua conta MySQL, exemplo "admin".
+- $cfg['Servers'][$i]['user'] = '';
+- $cfg['Servers'][$i]['password'] = '';
+
+Altere o user e password de acordo com as informações que você criou para sua conta MariaDB.
 
 ### Perguntas Frequentes
 
