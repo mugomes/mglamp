@@ -28,6 +28,18 @@ chmod +x mglamp
 ./mglamp
 ```
 
+### Configurações
+
+Você pode alterar a pasta de diretórios do seu projeto e a pasta de criação de certificados SSL, para isso edite o arquivo "mgconfig" e altere as variáveis "mg_diretorioprojeto" e "mg_diretoriossl".
+
+### Certificado SSL
+
+Para que o certificado SSL funcione corretamente, é necessário adicionar o arquivo pem no seu navegador de Internet.
+
+No Google Chrome ou Chromium abra as Configurações > Privacidade e Segurança > Segurança > Gerenciar Certificados > Autoridades > Importar.
+
+Importe o arquivo PEM que está na pasta "mglamp" em sua pasta principal ou caso tenha alterado a variável mg_diretoriossl abra a pasta que foi definida nessa variável.
+
 ### Instalação do PHPMyAdmin
 
 Ao ser solicitado para selecionar o servidor, escolha o Apache2.
