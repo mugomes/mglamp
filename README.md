@@ -1,6 +1,6 @@
 # MGLAMP
 
-É um script que permite realizar diversas tarefas automaticamente, como:
+É um script que permite criar e configurar um servidor local para testes de scripts em PHP.
 
 - Instalação do Apache, MariaDB, PHP e PHPMyAdmin
 - Ativar módulos de SSL e Rewrite
