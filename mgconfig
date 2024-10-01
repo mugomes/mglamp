@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Copyright (C) 2004-2024 Murilo Gomes Julio
+# SPDX-License-Identifier: MIT
+
+# Murilo Gomes
+# Site: https://linktr.ee/mugomes
+
+mg_diretorioprojeto=/home/$USER/phpprojects
+mg_diretoriossl=/home/$USER/mglamp

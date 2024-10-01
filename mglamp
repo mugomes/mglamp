@@ -1,0 +1,190 @@
+#!/bin/bash
+
+# Copyright (C) 2004-2024 Murilo Gomes Julio
+# SPDX-License-Identifier: MIT
+
+# Murilo Gomes
+# Site: https://linktr.ee/mugomes
+
+source ./mgconfig
+
+while true; do
+	echo ""
+	echo "-------------------------------- MGLAMP --------------------------------"
+    echo "Selecione uma opção:"
+    echo "1. Iniciar o servidor Apache2"
+    echo "2. Iniciar o servidor MariaDB"
+	echo ""
+    echo "3. Reiniciar o servidor Apache2"
+    echo "4. Reiniciar o servidor MariaDB"
+	echo ""
+    echo "5. Parar o servidor Apache2"
+    echo "6. Para o servidor MariaDB"
+	echo ""
+	echo "7. Criar um subdominio com SSL"
+	echo "8. Remover subdominio com SSL"
+	echo ""
+	echo "9. Instalar o Apache, MariaDB, PHP e PHPMyAdmin"
+    echo "10. Ativar Módulo SSL"
+    echo "11. Ativar Módulo Rewrite"
+    echo ""
+    echo "12. Sair"
+    echo "-------------------------------- /MGLAMP --------------------------------"
+	echo ""
+	
+    read -p "Opção: " option
+
+    case $option in
+    	1)  
+    		echo "Iniciando o servidor Apache2..."
+    		sudo systemctl start apache2
+    		echo "Servidor Apache2 iniciado com sucesso!"
+    		;;
+    	2)
+    		echo "Iniciando o servidor MariaDB..."
+    		sudo systemctl start mariadb
+    		echo "Servidor MariaDB iniciado com sucesso!"
+			;;
+		3)
+			echo "Reiniciando o servidor Apache2..."
+    		sudo systemctl restart apache2
+    		echo "Servidor Apache2 iniciado com sucesso!"
+			;;
+		4)
+			echo "Reiniciando o servidor MariaDB..."
+    		sudo systemctl restart mariadb
+    		echo "Servidor MariaDB iniciado com sucesso!"
+			;;
+		5)
+			echo "Parando o servidor Apache2..."
+    		sudo systemctl stop apache2
+    		echo "Servidor Apache2 parado com sucesso!"
+			;;
+		6)
+			echo "Parando o servidor MariaDB..."
+    		sudo systemctl stop mariadb
+    		echo "Servidor MariaDB parado com sucesso!"
+			;;
+		7)
+			read -p "Digite o nome do subdominio: " nomesubdominio
+			
+			sudo rm -f /etc/apache2/ssl/$nomesubdominio.localhost.crt
+			sudo rm -f /etc/apache2/ssl/$nomesubdominio.localhost.key
+			rm -rf $mg_diretoriossl/$nomesubdominio/			
+			mkdir -p $mg_diretoriossl/$nomesubdominio/
+			cd $mg_diretoriossl/$nomesubdominio/
+			
+			openssl req -x509 -nodes -new -sha256 -days 1024 -newkey rsa:2048 -keyout $nomesubdominio.server.key -out $nomesubdominio.server.pem -subj "/C=BR/CN=$nomesubdominio-Localhost-Root-CA"
+
+openssl x509 -outform pem -in $nomesubdominio.server.pem -out $nomesubdominio.server.crt
+
+echo "authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = $nomesubdominio.localhost
+DNS.2 = www.$nomesubdominio.localhost" > $nomesubdominio.domains.ext
+
+openssl req -new -nodes -newkey rsa:2048 -keyout $nomesubdominio.localhost.key -out $nomesubdominio.localhost.csr -subj "/C=BR/ST=SP/L=Sao Paulo/O=$nomesubdominio-Localhost-Certificates/CN=$nomesubdominio.localhost.local"
+
+openssl x509 -req -sha256 -days 1024 -in $nomesubdominio.localhost.csr -CA $nomesubdominio.server.pem -CAkey $nomesubdominio.server.key -CAcreateserial -extfile $nomesubdominio.domains.ext -out $nomesubdominio.localhost.crt
+
+			sudo mkdir -p /etc/apache2/ssl/
+			
+			sudo cp $nomesubdominio.localhost.crt /etc/apache2/ssl/
+			sudo cp $nomesubdominio.localhost.key /etc/apache2/ssl/
+			
+			echo "Excluindo subdominios com o mesmo nome..."
+			sudo rm -f /etc/apache2/sites-available/$nomesubdominio-localhost.conf
+			sudo rm -f /etc/apache2/sites-enabled/$nomesubdominio-localhost.conf
+			
+			echo "Criando arquivo de configuração do subdominio..."
+    		sudo tee "/etc/apache2/sites-available/$nomesubdominio-localhost.conf" > /dev/null <<EOF
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+        ServerName $nomesubdominio.localhost
+        ServerAlias www.$nomesubdominio.localhost
+        DocumentRoot $mg_diretorioprojeto/$nomesubdominio
+        <Directory $mg_diretorioprojeto/$nomesubdominio>
+                Options Indexes FollowSymLinks
+                AllowOverride All
+                Require all granted
+        </Directory>
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+	ServerAdmin webmaster@localhost
+	ServerName $nomesubdominio.localhost
+	ServerAlias www.$nomesubdominio.localhost
+        DocumentRoot $mg_diretorioprojeto/$nomesubdominio
+        <Directory $mg_diretorioprojeto/$nomesubdominio>
+                Options Indexes FollowSymLinks
+                AllowOverride All
+                Require all granted
+        </Directory>
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/$nomesubdominio.localhost.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/$nomesubdominio.localhost.key
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+			echo "Criando arquivo simbólico para o subdominio..."
+			sudo ln -s /etc/apache2/sites-available/$nomesubdominio-localhost.conf /etc/apache2/sites-enabled/$nomesubdominio-localhost.conf
+			
+			sudo systemctl restart apache2
+			
+			echo "Subdominio criado com sucesso!"
+			;;
+		8)
+			read -p "Digite o nome do subdominio: " nomesubdominio
+			echo "Removendo subdominio..."
+			sudo rm -f /etc/apache2/ssl/$nomesubdominio.localhost.crt
+			sudo rm -f /etc/apache2/ssl/$nomesubdominio.localhost.key
+			sudo rm -f /etc/apache2/sites-available/$nomesubdominio-localhost.conf
+			sudo rm -f /etc/apache2/sites-enabled/$nomesubdominio-localhost.conf
+			sudo systemctl restart apache2
+			echo "Subdominio removido com sucesso!"
+			;;
+		9)
+			echo "Instalando..."
+			sudo apt install apache2 mariadb-server phpmyadmin php libapache2-mod-php php-mysql
+			
+			echo "Alterado o APACHE_RUN_USER para $USER..."
+			sudo sed -i "s/export APACHE_RUN_USER=www-data/export APACHE_RUN_USER=$USER/g" /etc/apache2/envvars
+			
+			echo "Aplicando permissão de escrita e leitura para todos no diretório tmp em /var/lib/phpmyadmin/..."
+			sudo chmod 777 /var/lib/phpmyadmin/tmp
+			
+			echo "Reiniciando servidor Apache..."
+			sudo systemctl restart apache2
+			
+			echo "Instalado e configurado com sucesso!"
+			;;		
+		10)
+			echo "Ativando módulo SSL..."
+			sudo a2enmod ssl
+			sudo systemctl restart apache2
+			echo "Módulo ativado!"
+			;;
+		11)
+			echo "Ativando módulo rewrite..."
+			sudo a2enmod rewrite
+			sudo systemctl restart apache2
+			echo "Módulo ativado!"
+			;;		
+        12)
+            echo "Saindo..."
+            exit 0
+            ;;
+        *)
+            echo "Opção inválida. Por favor, escolha uma opção válida."
+            ;;
+    esac
+done
